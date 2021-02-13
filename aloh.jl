@@ -2,31 +2,29 @@
 # - add max storage days
 # - add full requirement
 # - reTest.jl for tests?
-# - English description of math algorith
-# - docs?
 
 using JuMP
 using GLPK
 
-function maxday(orders)
-    maximum(item[1]  for row in orders for item in row)
-end  
-
-function nrows(orders)
-    size(orders, 1)
-end
-
 # *** Inputs ***
 
-# Orders can be placed on different days. Tuple is (day, volume, price).
-# There can be different amount of orders per product.
+# order_list is a list of lists, one list for each product
+# Orders can be placed on different days. There can be several or no orders on one day.
+# Each order is a tuple (day, volume, price).
+
+struct Order
+    day:: Int64
+    volume:: Int64
+    price:: Float64
+end
+
 order_list = [
     [(1,  4, 0.5), 
      (1,  1, 0.5), 
      (1,  5, 0.1), # unprofitable, must reject
      (2,  8, 0.5), 
      (3, 14, 0.5)],
-    [(1, 12, 0.5), # over capacity, will reject 
+    [(1, 12, 0.5), # over capacity, must reject 
      (3, 21, 0.5)]
 ]
 capacity = [10, 10]
@@ -34,6 +32,14 @@ unitcost = [0.2, 0.2]
 inventory_weight = 0.5
 
 # *** Model ***
+
+function maxday(order_list)
+    maximum(item[1] for row in order_list for item in row)
+end  
+
+function nrows(order_list)
+    size(order_list, 1)
+end
 
 n_products = nrows(order_list)
 n_days = maxday(order_list)
@@ -46,7 +52,7 @@ model = Model(GLPK.Optimizer)
 # Costs
 costs = unitcost .* x
 
-# Create binary variable for each order, 1 - accept, 0 - reject
+# Create binary variable for each order, 1 - accept order, 0 - reject order
 acc = Vector{Vector{VariableRef}}()
 for (i, row) in enumerate(order_list)
     vs = @variable(model, [j=1:length(row)], Bin, base_name="acc_"*string(i))
