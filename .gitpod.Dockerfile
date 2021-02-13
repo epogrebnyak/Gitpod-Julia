@@ -16,8 +16,6 @@ RUN sudo apt-get install -y \
         pkg-config \
 #        julia \
 RUN  sudo rm -rf /var/lib/apt/lists/*
-
-
 RUN wget https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz
 RUN tar zxvf julia-1.5.3-linux-x86_64.tar.gz
 
